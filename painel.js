@@ -8,6 +8,14 @@
  *
  *  Fonte de dados: o JSON agregado publicado por apps-script/Resumo.gs.
  *  Formato esperado: versão 1.x (ver FORMATO_SUPORTADO).
+ *
+ *  IDIOMA: a interface é em INGLÊS (a equipe que a usa trabalha em inglês).
+ *  O código, os comentários e a documentação continuam em português — quem
+ *  mantém é lusófona. Todo texto que a pessoa lê na tela fica em inglês, com
+ *  formato de número e data en-US (ponto decimal, vírgula de milhar).
+ *  Cuidado: parte do texto visível NÃO está aqui — nomes de tema, mensagens de
+ *  alerta e avisos vêm prontos do Resumo.gs. Traduzir só aqui deixaria o painel
+ *  bilíngue. Ver docs/DECISOES.md ADR-0009.
  * ============================================================================
  */
 (function () {
@@ -31,26 +39,26 @@
 
   function pct(v, casas) {
     if (typeof casas !== 'number') casas = 1;
-    return (v * 100).toFixed(casas).replace('.', ',') + '%';
+    return (v * 100).toFixed(casas) + '%';
   }
 
   function num(v) {
-    return Number(v || 0).toLocaleString('pt-BR');
+    return Number(v || 0).toLocaleString('en-US');
   }
 
-  /** 1.234.567 → "1,2 mi"; 45.000 → "45 mil". Para o alcance (UVM). */
+  /** 1234567 → "1.2M"; 45000 → "45K". Para o alcance (UVM). */
   function numCurto(v) {
     v = Number(v || 0);
-    if (v >= 1e9) return (v / 1e9).toFixed(1).replace('.', ',') + ' bi';
-    if (v >= 1e6) return (v / 1e6).toFixed(1).replace('.', ',') + ' mi';
-    if (v >= 1e3) return Math.round(v / 1e3) + ' mil';
+    if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+    if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+    if (v >= 1e3) return Math.round(v / 1e3) + 'K';
     return num(v);
   }
 
-  var MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-                      'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  var MESES_CURTOS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  /** '2026-08' → 'ago/26' */
+  /** '2026-08' → 'Aug/26' */
   function mesLegivel(iso) {
     var p = String(iso).split('-');
     if (p.length < 2) return iso;
@@ -59,14 +67,14 @@
     return MESES_CURTOS[i] + '/' + p[0].slice(2);
   }
 
-  /** '2026-08-04' → '4 de agosto de 2026' */
-  var MESES_LONGOS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                      'julho', 'agosto', 'setembro', 'outubro', 'novembro',
-                      'dezembro'];
+  /** '2026-08-04' → 'August 4, 2026' */
+  var MESES_LONGOS = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November',
+                      'December'];
   function diaLegivel(iso) {
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return iso || '—';
-    return Number(m[3]) + ' de ' + MESES_LONGOS[Number(m[2]) - 1] + ' de ' + m[1];
+    return MESES_LONGOS[Number(m[2]) - 1] + ' ' + Number(m[3]) + ', ' + m[1];
   }
 
   function diasDesde(iso) {
@@ -132,27 +140,27 @@
     var url = (window.CONFIG && CONFIG.URL_RESUMO || '').trim();
 
     if (!url) {
-      mostrarErro('O endereço do resumo ainda não foi configurado.',
-        'Abra o arquivo config.js do site e preencha URL_RESUMO com a URL do ' +
-        'app da web publicado pelo Apps Script (a que termina em /exec).');
+      mostrarErro('The summary URL has not been configured yet.',
+        'Open the site\'s config.js file and set URL_RESUMO to the URL of the ' +
+        'web app published by Apps Script (the one ending in /exec).');
       return;
     }
 
     buscar(url)
       .then(function (dados) {
         if (!dados || dados.ok === false) {
-          throw new Error(dados && dados.erro || 'O resumo veio com erro.');
+          throw new Error(dados && dados.erro || 'The summary returned an error.');
         }
         var maior = parseInt(String(dados.versao || '0').split('.')[0], 10);
         if (maior !== FORMATO_SUPORTADO) {
-          throw new Error('O resumo está no formato ' + dados.versao +
-            ', e este site entende o formato ' + FORMATO_SUPORTADO +
-            '.x. Atualize o site.');
+          throw new Error('The summary is in format ' + dados.versao +
+            ', and this site understands format ' + FORMATO_SUPORTADO +
+            '.x. Please update the site.');
         }
         desenhar(dados);
       })
       .catch(function (erro) {
-        mostrarErro('Falha ao buscar os dados.', erro && erro.message || String(erro));
+        mostrarErro('Could not fetch the data.', erro && erro.message || String(erro));
       });
   }
 
@@ -176,7 +184,7 @@
       var script = document.createElement('script');
       var relogio = setTimeout(function () {
         encerrar();
-        reject(new Error('Tempo esgotado ao buscar os dados (20s).'));
+        reject(new Error('Timed out fetching the data (20s).'));
       }, 20000);
 
       function encerrar() {
@@ -188,8 +196,8 @@
       window[nome] = function (dados) { encerrar(); resolve(dados); };
       script.onerror = function () {
         encerrar();
-        reject(new Error('O endereço do resumo não respondeu. Verifique a URL ' +
-          'em config.js e se a implantação do Apps Script está publicada.'));
+        reject(new Error('The summary URL did not respond. Check the URL in ' +
+          'config.js and whether the Apps Script deployment is published.'));
       };
       script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + nome;
       document.body.appendChild(script);
@@ -203,7 +211,7 @@
     caixa.hidden = false;
     caixa.querySelector('h2').textContent = titulo;
     porId('erro-detalhe').textContent = detalhe || '';
-    porId('atualizado-em').textContent = 'indisponível';
+    porId('atualizado-em').textContent = 'unavailable';
   }
 
   // === Desenho ===========================================================
@@ -224,12 +232,12 @@
     sentimento(d);
     veiculos(d);
 
-    porId('rodape-versao').textContent = 'Formato do resumo: ' + d.versao + '.';
+    porId('rodape-versao').textContent = 'Summary format: ' + d.versao + '.';
   }
 
   function cabecalho(d) {
     var ultimo = d.cobertura && d.cobertura.ultimoAlerta;
-    porId('atualizado-em').textContent = ultimo ? diaLegivel(ultimo) : 'sem dados';
+    porId('atualizado-em').textContent = ultimo ? diaLegivel(ultimo) : 'no data';
 
     var dias = ultimo ? diasDesde(ultimo) : null;
     var limite = (window.CONFIG && CONFIG.DIAS_PARA_ALERTAR) || 10;
@@ -239,11 +247,11 @@
 
     var periodo = porId('cobertura-periodo');
     if (d.cobertura && d.cobertura.primeiroAlerta) {
-      var texto = 'Série desde ' + diaLegivel(d.cobertura.primeiroAlerta);
+      var texto = 'Series since ' + diaLegivel(d.cobertura.primeiroAlerta);
       if (dias !== null) {
-        texto += dias === 0 ? ' · hoje'
-               : dias === 1 ? ' · há 1 dia'
-               : ' · há ' + dias + ' dias';
+        texto += dias === 0 ? ' · today'
+               : dias === 1 ? ' · 1 day ago'
+               : ' · ' + dias + ' days ago';
       }
       periodo.textContent = texto;
     }
@@ -283,20 +291,30 @@
     }
 
     if (propria) {
-      cartao('SoV da Zendesk · período todo', pct(propria.share),
-        num(propria.artigosUnicos) + ' artigos únicos', true);
-      cartao('Posição no setor',
-        posicao + 'º de ' + sov.length,
-        lider && !lider.ehPrincipal ? 'Lidera: ' + lider.marca : 'A Zendesk lidera');
-      cartao('Alcance estimado', numCurto(propria.uvm),
-        'Soma de UVM das matérias');
+      cartao('Zendesk SoV · full period', pct(propria.share),
+        num(propria.artigosUnicos) + ' unique articles', true);
+      cartao('Industry rank',
+        ordinal(posicao) + ' of ' + sov.length,
+        lider && !lider.ehPrincipal ? 'Leader: ' + lider.marca : 'Zendesk leads');
+      cartao('Estimated reach', numCurto(propria.uvm),
+        'Sum of article UVM');
     } else {
-      cartao('SoV da Zendesk · período todo', '—',
-        'A Zendesk não aparece nos dados', true);
+      cartao('Zendesk SoV · full period', '—',
+        'Zendesk does not appear in the data', true);
     }
 
-    cartao('Total do setor', num(totalArtigos),
-      'Artigos únicos, ' + sov.length + ' marcas');
+    cartao('Industry total', num(totalArtigos),
+      'Unique articles, ' + sov.length + ' brands');
+  }
+
+  /** 1 → '1st', 2 → '2nd', 3 → '3rd', 4 → '4th', 11 → '11th'. */
+  function ordinal(n) {
+    n = Number(n) || 0;
+    var resto100 = n % 100;
+    if (resto100 >= 11 && resto100 <= 13) return n + 'th';
+    var resto10 = n % 10;
+    return n + (resto10 === 1 ? 'st' : resto10 === 2 ? 'nd'
+              : resto10 === 3 ? 'rd' : 'th');
   }
 
   // --- Bloco 1: Share of Voice -------------------------------------------
@@ -305,7 +323,7 @@
     var caixa = porId('g-sov-barras');
     limpar(caixa);
     var sov = d.sov || [];
-    if (!sov.length) { caixa.appendChild(el('p', 'vazio', 'Sem dados.')); return; }
+    if (!sov.length) { caixa.appendChild(el('p', 'vazio', 'No data.')); return; }
 
     var maior = sov[0].share || 1;
     var lista = el('div', 'barras');
@@ -336,12 +354,12 @@
     var caixa = porId('g-sov-tabela');
     limpar(caixa);
     var sov = d.sov || [];
-    if (!sov.length) { caixa.appendChild(el('p', 'vazio', 'Sem dados.')); return; }
+    if (!sov.length) { caixa.appendChild(el('p', 'vazio', 'No data.')); return; }
 
     var tabela = el('table');
     var thead = el('thead');
     var tr = el('tr');
-    ['Marca', 'Únicos', 'Total', 'Alcance', 'Share'].forEach(function (t, i) {
+    ['Brand', 'Unique', 'Total', 'Reach', 'Share'].forEach(function (t, i) {
       tr.appendChild(el('th', i === 0 ? null : 'num', t));
     });
     thead.appendChild(tr);
@@ -375,8 +393,8 @@
     if (ev.meses.length < 2) {
       caixa.appendChild(el('p', 'vazio',
         ev.meses.length === 1
-          ? 'Há apenas um mês de dados: a evolução aparece a partir do segundo mês.'
-          : 'Sem dados suficientes para a série temporal.'));
+          ? 'Only one month of data so far: the trend appears from the second month on.'
+          : 'Not enough data for the time series.'));
       return;
     }
 
@@ -465,7 +483,7 @@
         });
         var titulo = svgEl('title');
         titulo.textContent = s.marca + ' — ' + mesLegivel(ev.meses[i]) + ': ' +
-          pct(v) + ' (' + num(s.artigosUnicos[i]) + ' artigos)';
+          pct(v) + ' (' + num(s.artigosUnicos[i]) + ' articles)';
         c.appendChild(titulo);
         svg.appendChild(c);
       });
@@ -478,7 +496,7 @@
     // isso, a diferença entre os dois números parece erro.
     var ultimo = ev.meses.length - 1;
     caixaLegenda.appendChild(el('span', 'legenda-titulo',
-      'Em ' + mesLegivel(ev.meses[ultimo]) + ':'));
+      'In ' + mesLegivel(ev.meses[ultimo]) + ':'));
     ev.series.slice().sort(function (a, b) {
       return b.share[ultimo] - a.share[ultimo];
     }).forEach(function (s) {
@@ -495,9 +513,9 @@
   // --- Bloco 3: Alertas --------------------------------------------------
 
   var ROTULOS_ALERTA = {
-    pico_concorrente: 'Pico de concorrente',
-    queda_principal: 'Queda da Zendesk',
-    lideranca: 'Liderança'
+    pico_concorrente: 'Competitor spike',
+    queda_principal: 'Zendesk drop',
+    lideranca: 'Leadership'
   };
 
   function alertas(d) {
@@ -507,14 +525,14 @@
 
     if (!a.suficienteParaComparar) {
       caixa.appendChild(el('div', 'sem-alerta',
-        a.motivo || 'Sem histórico suficiente para comparar meses.'));
+        a.motivo || 'Not enough history to compare months.'));
       return;
     }
 
     if (!a.lista || !a.lista.length) {
       caixa.appendChild(el('div', 'sem-alerta',
-        'Nenhuma movimentação relevante no mês mais recente, comparado à ' +
-        'média dos meses anteriores.'));
+        'No relevant movement in the most recent month, compared with the ' +
+        'average of previous months.'));
       return;
     }
 
@@ -534,15 +552,15 @@
     var t = d.temas || { lista: [] };
 
     if (!t.lista || !t.lista.length) {
-      caixa.appendChild(el('p', 'vazio', 'Sem matérias para classificar.'));
+      caixa.appendChild(el('p', 'vazio', 'No articles to classify.'));
       return;
     }
 
     if (t.artigosConsiderados) {
       var cobertura = t.artigosClassificados / t.artigosConsiderados;
       caixa.appendChild(el('p', 'secao-nota',
-        num(t.artigosClassificados) + ' de ' + num(t.artigosConsiderados) +
-        ' matérias (' + pct(cobertura, 0) + ') casaram com algum tema.'));
+        num(t.artigosClassificados) + ' of ' + num(t.artigosConsiderados) +
+        ' articles (' + pct(cobertura, 0) + ') matched a topic.'));
     }
 
     var maior = t.lista.reduce(function (m, x) { return Math.max(m, x.total); }, 0) || 1;
@@ -552,7 +570,7 @@
       var item = el('div', 'barra-item');
       var topo = el('div', 'barra-topo');
       topo.appendChild(el('span', 'barra-nome', tema.tema));
-      topo.appendChild(el('span', 'barra-valor', num(tema.total) + ' menções'));
+      topo.appendChild(el('span', 'barra-valor', num(tema.total) + ' mentions'));
       item.appendChild(topo);
 
       // Barra empilhada por marca: mostra quem domina cada tema.
@@ -594,13 +612,13 @@
     limpar(caixa);
     var lista = d.sentimento || [];
     if (!lista.length) {
-      caixa.appendChild(el('p', 'vazio', 'Sem matérias classificadas.'));
+      caixa.appendChild(el('p', 'vazio', 'No classified articles.'));
       return;
     }
 
     var legenda = el('div', 'legenda-sentimento');
-    [['Positivo', 'var(--positivo)'], ['Neutro', 'var(--neutro)'],
-     ['Negativo', 'var(--negativo)'], ['Sem classificação', '#DDE1E6']]
+    [['Positive', 'var(--positivo)'], ['Neutral', 'var(--neutro)'],
+     ['Negative', 'var(--negativo)'], ['Unclassified', '#DDE1E6']]
       .forEach(function (par) {
         var item = el('span', 'legenda-item');
         item.appendChild(marcaComCor(par[0], par[1]));
@@ -615,20 +633,22 @@
       topo.appendChild(el('span', 'barra-nome' + (s.ehPrincipal ? ' propria' : ''),
         s.marca));
       var resumo = s.classificadas > 0
-        ? pct(s.positivo / s.classificadas, 0) + ' positivo · ' +
-          num(s.total) + ' matérias'
-        : num(s.total) + ' matérias, nenhuma classificada';
+        ? pct(s.positivo / s.classificadas, 0) + ' positive · ' +
+          num(s.total) + ' articles'
+        : num(s.total) + ' articles, none classified';
       topo.appendChild(el('span', 'barra-valor', resumo));
       item.appendChild(topo);
 
       var pilha = el('div', 'empilhada');
-      [['positivo', s.positivo], ['neutro', s.neutro],
-       ['negativo', s.negativo], ['sem', s.semClassificacao]]
+      // O primeiro item é a classe CSS (não traduzir) e o segundo o rótulo
+      // visível no tooltip.
+      [['positivo', 'Positive', s.positivo], ['neutro', 'Neutral', s.neutro],
+       ['negativo', 'Negative', s.negativo], ['sem', 'Unclassified', s.semClassificacao]]
         .forEach(function (par) {
-          if (!par[1]) return;
+          if (!par[2]) return;
           var fatia = el('span', 'fatia-' + par[0]);
-          fatia.style.width = (par[1] / s.total * 100) + '%';
-          fatia.title = par[0] + ': ' + num(par[1]);
+          fatia.style.width = (par[2] / s.total * 100) + '%';
+          fatia.title = par[1] + ': ' + num(par[2]);
           pilha.appendChild(fatia);
         });
       item.appendChild(pilha);
@@ -645,10 +665,10 @@
     var caixaTop = porId('g-veiculos');
     limpar(caixaTop);
     if (!v.top || !v.top.length) {
-      caixaTop.appendChild(el('p', 'vazio', 'Sem veículos nos dados.'));
+      caixaTop.appendChild(el('p', 'vazio', 'No outlets in the data.'));
     } else {
       caixaTop.appendChild(el('p', 'secao-nota',
-        num(v.total) + ' veículos no período. Os ' + v.top.length + ' maiores:'));
+        num(v.total) + ' outlets in the period. Top ' + v.top.length + ':'));
       var maior = v.top[0].total || 1;
       var lista = el('div', 'barras');
       v.top.forEach(function (item) {
@@ -681,20 +701,20 @@
     var lac = v.lacunas || { top: [], total: 0 };
     if (!lac.top || !lac.top.length) {
       caixaLacunas.appendChild(el('p', 'vazio',
-        'Todos os veículos do período já publicaram algo sobre a Zendesk.'));
+        'Every outlet in the period has published something about Zendesk.'));
       return;
     }
     caixaLacunas.appendChild(el('p', 'secao-nota',
-      num(lac.total) + ' veículos publicaram sobre concorrentes e nenhuma vez ' +
-      'sobre a Zendesk. Ordenados por volume — é onde o esforço de imprensa ' +
-      'tende a render mais.'));
+      num(lac.total) + ' outlets published about competitors and never about ' +
+      'Zendesk. Sorted by volume — this is where press effort tends to pay ' +
+      'off most.'));
 
     var tabela = el('table');
     var thead = el('thead');
     var tr = el('tr');
-    tr.appendChild(el('th', null, 'Veículo'));
-    tr.appendChild(el('th', 'num', 'Matérias'));
-    tr.appendChild(el('th', null, 'Sobre quem publica'));
+    tr.appendChild(el('th', null, 'Outlet'));
+    tr.appendChild(el('th', 'num', 'Articles'));
+    tr.appendChild(el('th', null, 'Covers'));
     thead.appendChild(tr);
     tabela.appendChild(thead);
 

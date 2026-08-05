@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,17 +11,17 @@
 </head>
 <body>
 
-<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<a class="pular" href="#conteudo">Skip to content</a>
 
 <header class="topo">
   <div class="faixa">
     <div class="titulo-area">
-      <p class="sobre-titulo">Inteligência competitiva de imprensa</p>
+      <p class="sobre-titulo">Press competitive intelligence</p>
       <h1>Share of Voice — LATAM</h1>
     </div>
     <div class="atualizacao" id="atualizacao" aria-live="polite">
-      <span class="rotulo">Dados atualizados em</span>
-      <strong id="atualizado-em">carregando…</strong>
+      <span class="rotulo">Data updated on</span>
+      <strong id="atualizado-em">loading…</strong>
       <span class="detalhe" id="cobertura-periodo"></span>
     </div>
   </div>
@@ -32,9 +32,9 @@
   <!-- Aparece SÓ com dados de demonstração, para que números inventados nunca
        passem por reais. Ver scripts/previa-site.sh. -->
   <div id="demonstracao" class="tarja-demo" hidden>
-    <strong>Dados de demonstração</strong>
-    <span>Estes números são inventados, só para você ver o desenho do painel.
-    Nada aqui vem da sua planilha.</span>
+    <strong>Demo data</strong>
+    <span>These numbers are made up, just to show the layout of the dashboard.
+    Nothing here comes from your spreadsheet.</span>
   </div>
 
   <!-- Avisos honestos: coleta parada, aba vazia, tracker não mapeado. -->
@@ -42,15 +42,15 @@
 
   <!-- Estado de carregamento e de erro -->
   <div id="carregando" class="estado">
-    <p>Carregando os dados da planilha…</p>
+    <p>Loading data from the spreadsheet…</p>
   </div>
   <div id="erro" class="estado estado-erro" hidden>
-    <h2>Não foi possível carregar os dados</h2>
+    <h2>Could not load the data</h2>
     <p id="erro-detalhe"></p>
     <p class="ajuda">
-      Se isso persistir, o mais provável é que o endereço do resumo não esteja
-      configurado ou a publicação do Apps Script tenha expirado. O passo a passo
-      está no manual do administrador, seção 7.
+      If this persists, the most likely cause is that the summary URL is not
+      configured or the Apps Script deployment has expired. Step-by-step
+      instructions are in the administrator manual, section 7.
     </p>
   </div>
 
@@ -66,17 +66,17 @@
       <div class="secao-cabecalho">
         <h2>1. Share of Voice</h2>
         <p class="secao-nota">
-          Participação de cada marca no total de artigos únicos publicados.
-          Consolidado LATAM — os alertas do Muck Rack não separam por país.
+          Each brand's share of all unique articles published. LATAM
+          consolidated — Muck Rack alerts do not break down by country.
         </p>
       </div>
       <div class="grade-2">
         <figure class="cartao-grafico">
-          <figcaption>Participação no total do período</figcaption>
+          <figcaption>Share of the period total</figcaption>
           <div id="g-sov-barras" class="grafico"></div>
         </figure>
         <figure class="cartao-grafico">
-          <figcaption>Volume de artigos únicos por marca</figcaption>
+          <figcaption>Unique article volume by brand</figcaption>
           <div id="g-sov-tabela" class="grafico"></div>
         </figure>
       </div>
@@ -85,13 +85,14 @@
     <!-- ===== Bloco 1b: Evolução ===== -->
     <section class="secao" id="bloco-evolucao">
       <div class="secao-cabecalho">
-        <h2>2. Evolução no tempo</h2>
+        <h2>2. Trend over time</h2>
         <p class="secao-nota">
-          Share of Voice mês a mês. O mês é a data do alerta processado.
+          Share of Voice month by month. The month is the date of the processed
+          alert.
         </p>
       </div>
       <figure class="cartao-grafico largo">
-        <figcaption>Share of Voice mensal (%)</figcaption>
+        <figcaption>Monthly Share of Voice (%)</figcaption>
         <div id="g-evolucao" class="grafico"></div>
         <div id="legenda-evolucao" class="legenda"></div>
       </figure>
@@ -100,9 +101,9 @@
     <!-- ===== Bloco 3: Alertas de movimentação ===== -->
     <section class="secao" id="bloco-alertas">
       <div class="secao-cabecalho">
-        <h2>3. Alertas de movimentação</h2>
+        <h2>3. Movement alerts</h2>
         <p class="secao-nota">
-          Comparação do mês mais recente com a média dos meses anteriores.
+          The most recent month compared with the average of previous months.
         </p>
       </div>
       <div id="lista-alertas" class="alertas"></div>
@@ -111,17 +112,17 @@
     <!-- ===== Bloco 4: Temas ===== -->
     <section class="secao" id="bloco-temas">
       <div class="secao-cabecalho">
-        <h2>4. Temas e narrativas</h2>
+        <h2>4. Topics and narratives</h2>
         <p class="secao-nota">
-          Sobre o que cada marca é citada. Classificação por palavras-chave no
-          título, em português, espanhol e inglês —
-          <strong>é uma aproximação</strong>: um título pode entrar em mais de um
-          tema, e o que não casa com nenhuma palavra aparece como
-          &ldquo;sem tema identificado&rdquo;.
+          What each brand is mentioned for. Classified by keywords in the
+          headline, in Portuguese, Spanish and English —
+          <strong>this is an approximation</strong>: one headline can fall under
+          more than one topic, and anything matching no keyword shows up as
+          &ldquo;no topic identified&rdquo;.
         </p>
       </div>
       <figure class="cartao-grafico largo">
-        <figcaption>Menções por tema e marca</figcaption>
+        <figcaption>Mentions by topic and brand</figcaption>
         <div id="g-temas" class="grafico"></div>
       </figure>
     </section>
@@ -129,14 +130,14 @@
     <!-- ===== Bloco 5: Sentimento ===== -->
     <section class="secao" id="bloco-sentimento">
       <div class="secao-cabecalho">
-        <h2>5. Tom da cobertura</h2>
+        <h2>5. Coverage tone</h2>
         <p class="secao-nota">
-          Sentimento classificado pelo Muck Rack. O percentual considera apenas
-          as matérias que vieram classificadas.
+          Sentiment as classified by Muck Rack. The percentage counts only the
+          articles that came in classified.
         </p>
       </div>
       <figure class="cartao-grafico largo">
-        <figcaption>Distribuição de sentimento por marca</figcaption>
+        <figcaption>Sentiment distribution by brand</figcaption>
         <div id="g-sentimento" class="grafico"></div>
       </figure>
     </section>
@@ -144,20 +145,19 @@
     <!-- ===== Bloco 6: Veículos ===== -->
     <section class="secao" id="bloco-veiculos">
       <div class="secao-cabecalho">
-        <h2>6. Veículos</h2>
+        <h2>6. Outlets</h2>
         <p class="secao-nota">
-          Quem publica sobre o setor. O alerta do Muck Rack não traz o nome do
-          jornalista, por isso a análise é por veículo.
+          Who publishes about the industry, and which brands each outlet covers.
         </p>
       </div>
       <div class="grade-2">
         <figure class="cartao-grafico">
-          <figcaption>Veículos que mais publicam</figcaption>
+          <figcaption>Top publishing outlets</figcaption>
           <div id="g-veiculos" class="grafico"></div>
         </figure>
         <figure class="cartao-grafico destaque-oportunidade">
           <figcaption>
-            Oportunidades: cobrem concorrentes e não a Zendesk
+            Opportunities: cover competitors but not Zendesk
           </figcaption>
           <div id="g-lacunas" class="grafico"></div>
         </figure>
@@ -169,13 +169,13 @@
 
 <footer class="rodape">
   <p>
-    Dados coletados dos alertas do Muck Rack, processados automaticamente
-    segunda, quarta e sexta.
+    Data collected from Muck Rack alerts, processed automatically on Monday,
+    Wednesday and Friday.
     <span id="rodape-versao"></span>
   </p>
   <p class="rodape-nota">
-    Este painel mede <strong>volume</strong> de cobertura, não qualidade
-    editorial. Duplicatas marcadas pelo Muck Rack são descartadas.
+    This dashboard measures <strong>volume</strong> of coverage, not editorial
+    quality. Duplicates flagged by Muck Rack are discarded.
   </p>
 </footer>
 
