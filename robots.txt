@@ -1,0 +1,4 @@
+# Este painel é interno: acessível só por quem tem o link.
+# Nenhum buscador deve indexá-lo. Ver docs/DECISOES.md ADR-0006.
+User-agent: *
+Disallow: /

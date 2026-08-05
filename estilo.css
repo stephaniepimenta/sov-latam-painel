@@ -1,0 +1,465 @@
+/* ==========================================================================
+   Share of Voice — Zendesk LATAM
+   Sem framework e sem dependência externa de propósito: o site precisa abrir
+   rápido e continuar funcionando daqui a anos, sem ninguém atualizar nada.
+   ========================================================================== */
+
+:root {
+  /* Paleta: uma cor forte para a marca própria, tons neutros distintos para os
+     concorrentes. Concorrente nunca ganha cor mais chamativa que a Zendesk. */
+  --zendesk:      #17494D;
+  --zendesk-viva: #00A886;
+  --salesforce:   #4A6FA5;
+  --intercom:     #6B5B95;
+  --freshworks:   #B5651D;
+  --servicenow:   #4F7942;
+  --hubspot:      #A65A47;
+  --outra:        #7A7A85;
+
+  --positivo: #2E7D64;
+  --neutro:   #9AA0A6;
+  --negativo: #B4444F;
+
+  --tinta:        #14181F;
+  --tinta-media:  #4C5561;
+  --tinta-fraca:  #737D8A;
+  --linha:        #E3E6EB;
+  --fundo:        #F7F8FA;
+  --papel:        #FFFFFF;
+
+  --alerta-alta:  #B4444F;
+  --alerta-media: #C08428;
+
+  --raio: 10px;
+  --sombra: 0 1px 2px rgba(20, 24, 31, .05), 0 4px 14px rgba(20, 24, 31, .05);
+  --largura: 1180px;
+}
+
+* { box-sizing: border-box; }
+
+/* O atributo hidden do HTML só esconde porque o navegador traz a regra
+   [hidden] { display: none }. Qualquer regra nossa que declare display para o
+   mesmo elemento empata em especificidade e vence a do navegador — e aí
+   hidden = true no JavaScript não esconde nada. Foi assim que a tarja de
+   demonstração (.tarja-demo tem display: flex) apareceu sobre dado real.
+   O !important aqui garante que esconder sempre ganha, independente da classe. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font: 400 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter,
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Link de acessibilidade: visível só ao navegar por teclado. */
+.pular {
+  position: absolute; left: -9999px;
+  background: var(--zendesk); color: #fff;
+  padding: .7rem 1rem; z-index: 10; border-radius: 0 0 var(--raio) 0;
+}
+.pular:focus { left: 0; top: 0; }
+
+/* ===== Topo ============================================================== */
+
+.topo {
+  background: var(--papel);
+  border-bottom: 1px solid var(--linha);
+}
+
+.faixa {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 1.6rem 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sobre-titulo {
+  margin: 0 0 .15rem;
+  font-size: .78rem;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  font-weight: 600;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  font-weight: 700;
+}
+
+/* O indicador de atualização é deliberadamente proeminente: uma coleta parada
+   precisa ser percebida, não descoberta depois. */
+.atualizacao {
+  text-align: right;
+  font-size: .88rem;
+  color: var(--tinta-media);
+  border-left: 3px solid var(--zendesk-viva);
+  padding-left: .9rem;
+}
+.atualizacao .rotulo {
+  display: block;
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--tinta-fraca);
+}
+.atualizacao strong { font-size: 1.05rem; color: var(--tinta); }
+.atualizacao .detalhe { display: block; font-size: .8rem; color: var(--tinta-fraca); }
+.atualizacao.vencida { border-left-color: var(--alerta-alta); }
+.atualizacao.vencida strong { color: var(--alerta-alta); }
+
+/* ===== Estrutura ========================================================= */
+
+main {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+}
+
+.secao { margin-bottom: 2.5rem; }
+
+.secao-cabecalho { margin-bottom: 1rem; }
+
+.secao h2 {
+  margin: 0 0 .3rem;
+  font-size: 1.18rem;
+  letter-spacing: -.01em;
+}
+
+.secao-nota {
+  margin: 0;
+  font-size: .875rem;
+  color: var(--tinta-media);
+  max-width: 78ch;
+}
+
+.grade-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.1rem;
+}
+
+.cartao-grafico {
+  background: var(--papel);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  margin: 0;
+  padding: 1.1rem 1.2rem 1.3rem;
+  min-width: 0;
+}
+
+.cartao-grafico figcaption {
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin-bottom: .9rem;
+}
+
+.destaque-oportunidade { border-color: #CFE3DC; background: #FBFEFD; }
+
+/* ===== Cartões de número ================================================= */
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1.1rem;
+}
+
+.cartao {
+  background: var(--papel);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 1.1rem 1.2rem;
+}
+.cartao.principal {
+  border-color: var(--zendesk-viva);
+  background: linear-gradient(180deg, #F4FCFA 0%, #FFFFFF 65%);
+}
+.cartao .valor {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.cartao.principal .valor { color: var(--zendesk); }
+.cartao .chave {
+  font-size: .76rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--tinta-fraca);
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+.cartao .apoio { font-size: .82rem; color: var(--tinta-media); margin-top: .3rem; }
+
+/* ===== Barras horizontais (SoV, veículos, temas) ========================= */
+
+.barras { display: flex; flex-direction: column; gap: .7rem; }
+
+.barra-item { display: grid; grid-template-columns: 1fr; gap: .3rem; }
+
+.barra-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .75rem;
+  font-size: .9rem;
+}
+.barra-nome { font-weight: 600; }
+.barra-nome.propria { color: var(--zendesk); }
+.barra-valor {
+  color: var(--tinta-media);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: .85rem;
+}
+
+.barra-trilha {
+  background: #EDEFF3;
+  border-radius: 999px;
+  height: 11px;
+  overflow: hidden;
+}
+.barra-preenchida {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--outra);
+  min-width: 3px;
+  transition: width .5s cubic-bezier(.2,.7,.3,1);
+}
+
+/* ===== Tabela =========================================================== */
+
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+thead th {
+  text-align: left;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--tinta-fraca);
+  border-bottom: 1px solid var(--linha);
+  padding: 0 .5rem .5rem 0;
+  font-weight: 600;
+}
+tbody td {
+  padding: .55rem .5rem .55rem 0;
+  border-bottom: 1px solid #F0F2F5;
+  font-variant-numeric: tabular-nums;
+}
+tbody tr.propria { background: #F5FCFA; }
+tbody tr.propria td:first-child { font-weight: 700; color: var(--zendesk); }
+/* Coluna numérica alinhada à direita cola no texto da coluna seguinte — daí a
+   folga extra à direita, e não só o padding padrão da célula. */
+td.num, th.num { text-align: right; padding-right: 1.1rem; }
+tbody tr:last-child td { border-bottom: none; }
+
+.marcador {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  margin-right: .5rem;
+  vertical-align: baseline;
+}
+
+/* Em coluna estreita (folha A4, celular) o quadradinho de cor descolava do nome
+   da marca e caía numa linha sozinho. Um par marcador+nome nunca se separa —
+   mas a quebra ENTRE pares continua permitida, senão a lista de marcas
+   estouraria a célula. */
+.par-marca { white-space: nowrap; }
+
+/* ===== Gráfico de linhas (evolução) ===================================== */
+
+.grafico svg { display: block; width: 100%; height: auto; }
+
+.linha-serie { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+.linha-serie.propria { stroke-width: 3.25; }
+.ponto-serie { stroke: #fff; stroke-width: 1.5; }
+.eixo-linha { stroke: var(--linha); stroke-width: 1; }
+.eixo-texto { fill: var(--tinta-fraca); font-size: 11px; }
+.grade-linha { stroke: #F0F2F5; stroke-width: 1; }
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.1rem;
+  margin-top: 1rem;
+  font-size: .84rem;
+}
+.legenda-item { display: flex; align-items: center; gap: .4rem; color: var(--tinta-media); }
+.legenda-item.propria { color: var(--zendesk); font-weight: 700; }
+.legenda-cor { width: 14px; height: 3px; border-radius: 2px; }
+.legenda-titulo {
+  color: var(--tinta-fraca);
+  font-weight: 600;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* ===== Barras empilhadas (sentimento, temas) ============================ */
+
+.empilhada { display: flex; height: 22px; border-radius: 5px; overflow: hidden; background: #EDEFF3; }
+.empilhada > span { display: block; height: 100%; }
+.fatia-positivo { background: var(--positivo); }
+.fatia-neutro   { background: var(--neutro); }
+.fatia-negativo { background: var(--negativo); }
+.fatia-sem      { background: #DDE1E6; }
+
+.legenda-sentimento {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  font-size: .8rem; color: var(--tinta-media); margin-bottom: 1rem;
+}
+.legenda-sentimento .marcador { border-radius: 2px; }
+
+/* ===== Alertas ========================================================== */
+
+.alertas { display: flex; flex-direction: column; gap: .7rem; }
+
+.alerta {
+  background: var(--papel);
+  border: 1px solid var(--linha);
+  border-left: 4px solid var(--tinta-fraca);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: .9rem 1.1rem;
+  display: flex;
+  gap: .9rem;
+  align-items: baseline;
+}
+.alerta.alta  { border-left-color: var(--alerta-alta); }
+.alerta.media { border-left-color: var(--alerta-media); }
+.alerta .tipo {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+  white-space: nowrap;
+}
+.alerta.alta .tipo  { color: var(--alerta-alta); }
+.alerta.media .tipo { color: var(--alerta-media); }
+.alerta p { margin: 0; font-size: .93rem; }
+
+.sem-alerta {
+  background: var(--papel);
+  border: 1px dashed var(--linha);
+  border-radius: var(--raio);
+  padding: 1.1rem;
+  color: var(--tinta-media);
+  font-size: .92rem;
+}
+
+/* ===== Avisos =========================================================== */
+
+.avisos { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.75rem; }
+
+.aviso {
+  border-radius: var(--raio);
+  padding: .85rem 1.1rem;
+  font-size: .92rem;
+  border: 1px solid;
+  display: flex;
+  gap: .7rem;
+  align-items: baseline;
+}
+.aviso.alta  { background: #FDF4F5; border-color: #F0D3D6; color: #7E2B33; }
+.aviso.media { background: #FDF9EF; border-color: #EFE0C0; color: #6E5320; }
+.aviso .icone { font-weight: 700; }
+
+/* ===== Tarja de demonstração ============================================ */
+/* Listrada e impossível de confundir com dado real, de propósito. */
+
+.tarja-demo {
+  background: repeating-linear-gradient(45deg,
+    #FFF6DC 0 14px, #FDEFC8 14px 28px);
+  border: 1px solid #E3CE94;
+  border-radius: var(--raio);
+  padding: .85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  font-size: .92rem;
+  color: #6A5118;
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.tarja-demo strong { text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; }
+
+/* ===== Estados ========================================================== */
+
+.estado {
+  background: var(--papel);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--tinta-media);
+}
+.estado-erro { border-color: #F0D3D6; background: #FDF4F5; text-align: left; }
+.estado-erro h2 { margin: 0 0 .5rem; font-size: 1.05rem; color: #7E2B33; }
+.estado-erro .ajuda { font-size: .87rem; color: var(--tinta-media); }
+
+.vazio { color: var(--tinta-fraca); font-size: .9rem; font-style: italic; }
+
+/* ===== Rodapé =========================================================== */
+
+.rodape {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
+  border-top: 1px solid var(--linha);
+  font-size: .84rem;
+  color: var(--tinta-fraca);
+}
+.rodape p { margin: 0 0 .4rem; }
+.rodape-nota { font-size: .8rem; }
+
+/* ===== Responsivo ======================================================= */
+
+@media (max-width: 720px) {
+  .faixa { padding: 1.2rem 1rem; }
+  h1 { font-size: 1.45rem; }
+  .atualizacao { text-align: left; border-left-width: 3px; }
+  main { padding: 1.25rem 1rem 2rem; }
+  .cartao .valor { font-size: 1.7rem; }
+  .alerta { flex-direction: column; gap: .35rem; }
+
+  /* O SVG da evolução tem viewBox fixo e encolhe junto com a tela: num celular
+     ele cai a cerca de metade, e 11px de rótulo viram 5px — ilegível. Como o
+     texto está dentro do viewBox, ele escala junto, então aumentar aqui devolve
+     o tamanho aparente. Mesma razão para as linhas e os pontos. */
+  .eixo-texto { font-size: 21px; }
+  .linha-serie { stroke-width: 4; }
+  .linha-serie.propria { stroke-width: 6; }
+  .ponto-serie { stroke-width: 2.5; }
+}
+
+/* Respeita quem pediu menos animação no sistema. */
+@media (prefers-reduced-motion: reduce) {
+  .barra-preenchida { transition: none; }
+}
+
+/* Impressão: a gerente vai levar isso para reunião. */
+@media print {
+  body { background: #fff; }
+  .pular, .rodape-nota { display: none; }
+  .cartao-grafico, .cartao, .alerta { box-shadow: none; break-inside: avoid; }
+  .secao { break-inside: avoid; }
+}

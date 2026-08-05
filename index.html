@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Site acessível só por quem tem o link: sem indexação em buscadores.
+     Ver docs/DECISOES.md ADR-0006. -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Share of Voice — Zendesk LATAM</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <div class="faixa">
+    <div class="titulo-area">
+      <p class="sobre-titulo">Inteligência competitiva de imprensa</p>
+      <h1>Share of Voice — LATAM</h1>
+    </div>
+    <div class="atualizacao" id="atualizacao" aria-live="polite">
+      <span class="rotulo">Dados atualizados em</span>
+      <strong id="atualizado-em">carregando…</strong>
+      <span class="detalhe" id="cobertura-periodo"></span>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+
+  <!-- Aparece SÓ com dados de demonstração, para que números inventados nunca
+       passem por reais. Ver scripts/previa-site.sh. -->
+  <div id="demonstracao" class="tarja-demo" hidden>
+    <strong>Dados de demonstração</strong>
+    <span>Estes números são inventados, só para você ver o desenho do painel.
+    Nada aqui vem da sua planilha.</span>
+  </div>
+
+  <!-- Avisos honestos: coleta parada, aba vazia, tracker não mapeado. -->
+  <section id="avisos" class="avisos" hidden aria-live="polite"></section>
+
+  <!-- Estado de carregamento e de erro -->
+  <div id="carregando" class="estado">
+    <p>Carregando os dados da planilha…</p>
+  </div>
+  <div id="erro" class="estado estado-erro" hidden>
+    <h2>Não foi possível carregar os dados</h2>
+    <p id="erro-detalhe"></p>
+    <p class="ajuda">
+      Se isso persistir, o mais provável é que o endereço do resumo não esteja
+      configurado ou a publicação do Apps Script tenha expirado. O passo a passo
+      está no manual do administrador, seção 7.
+    </p>
+  </div>
+
+  <div id="painel" hidden>
+
+    <!-- ===== Resumo em números ===== -->
+    <section class="secao">
+      <div class="cartoes" id="cartoes"></div>
+    </section>
+
+    <!-- ===== Bloco 1: Share of Voice ===== -->
+    <section class="secao" id="bloco-sov">
+      <div class="secao-cabecalho">
+        <h2>1. Share of Voice</h2>
+        <p class="secao-nota">
+          Participação de cada marca no total de artigos únicos publicados.
+          Consolidado LATAM — os alertas do Muck Rack não separam por país.
+        </p>
+      </div>
+      <div class="grade-2">
+        <figure class="cartao-grafico">
+          <figcaption>Participação no total do período</figcaption>
+          <div id="g-sov-barras" class="grafico"></div>
+        </figure>
+        <figure class="cartao-grafico">
+          <figcaption>Volume de artigos únicos por marca</figcaption>
+          <div id="g-sov-tabela" class="grafico"></div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== Bloco 1b: Evolução ===== -->
+    <section class="secao" id="bloco-evolucao">
+      <div class="secao-cabecalho">
+        <h2>2. Evolução no tempo</h2>
+        <p class="secao-nota">
+          Share of Voice mês a mês. O mês é a data do alerta processado.
+        </p>
+      </div>
+      <figure class="cartao-grafico largo">
+        <figcaption>Share of Voice mensal (%)</figcaption>
+        <div id="g-evolucao" class="grafico"></div>
+        <div id="legenda-evolucao" class="legenda"></div>
+      </figure>
+    </section>
+
+    <!-- ===== Bloco 3: Alertas de movimentação ===== -->
+    <section class="secao" id="bloco-alertas">
+      <div class="secao-cabecalho">
+        <h2>3. Alertas de movimentação</h2>
+        <p class="secao-nota">
+          Comparação do mês mais recente com a média dos meses anteriores.
+        </p>
+      </div>
+      <div id="lista-alertas" class="alertas"></div>
+    </section>
+
+    <!-- ===== Bloco 4: Temas ===== -->
+    <section class="secao" id="bloco-temas">
+      <div class="secao-cabecalho">
+        <h2>4. Temas e narrativas</h2>
+        <p class="secao-nota">
+          Sobre o que cada marca é citada. Classificação por palavras-chave no
+          título, em português, espanhol e inglês —
+          <strong>é uma aproximação</strong>: um título pode entrar em mais de um
+          tema, e o que não casa com nenhuma palavra aparece como
+          &ldquo;sem tema identificado&rdquo;.
+        </p>
+      </div>
+      <figure class="cartao-grafico largo">
+        <figcaption>Menções por tema e marca</figcaption>
+        <div id="g-temas" class="grafico"></div>
+      </figure>
+    </section>
+
+    <!-- ===== Bloco 5: Sentimento ===== -->
+    <section class="secao" id="bloco-sentimento">
+      <div class="secao-cabecalho">
+        <h2>5. Tom da cobertura</h2>
+        <p class="secao-nota">
+          Sentimento classificado pelo Muck Rack. O percentual considera apenas
+          as matérias que vieram classificadas.
+        </p>
+      </div>
+      <figure class="cartao-grafico largo">
+        <figcaption>Distribuição de sentimento por marca</figcaption>
+        <div id="g-sentimento" class="grafico"></div>
+      </figure>
+    </section>
+
+    <!-- ===== Bloco 6: Veículos ===== -->
+    <section class="secao" id="bloco-veiculos">
+      <div class="secao-cabecalho">
+        <h2>6. Veículos</h2>
+        <p class="secao-nota">
+          Quem publica sobre o setor. O alerta do Muck Rack não traz o nome do
+          jornalista, por isso a análise é por veículo.
+        </p>
+      </div>
+      <div class="grade-2">
+        <figure class="cartao-grafico">
+          <figcaption>Veículos que mais publicam</figcaption>
+          <div id="g-veiculos" class="grafico"></div>
+        </figure>
+        <figure class="cartao-grafico destaque-oportunidade">
+          <figcaption>
+            Oportunidades: cobrem concorrentes e não a Zendesk
+          </figcaption>
+          <div id="g-lacunas" class="grafico"></div>
+        </figure>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="rodape">
+  <p>
+    Dados coletados dos alertas do Muck Rack, processados automaticamente
+    segunda, quarta e sexta.
+    <span id="rodape-versao"></span>
+  </p>
+  <p class="rodape-nota">
+    Este painel mede <strong>volume</strong> de cobertura, não qualidade
+    editorial. Duplicatas marcadas pelo Muck Rack são descartadas.
+  </p>
+</footer>
+
+<script src="config.js"></script>
+<script src="painel.js"></script>
+</body>
+</html>
