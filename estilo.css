@@ -264,7 +264,13 @@ tbody td {
   font-variant-numeric: tabular-nums;
 }
 tbody tr.propria { background: #F5FCFA; }
-tbody tr.propria td:first-child { font-weight: 700; color: var(--zendesk); }
+/* :not(.col-data) porque na listagem de matérias a primeira coluna é a DATA, e
+   o destaque caía sobre ela — a data da Zendesk aparecia verde e em negrito,
+   como se a data fosse o dado importante da linha. Na tabela de SoV a primeira
+   coluna é a marca, que é o que este destaque quer marcar. */
+tbody tr.propria td:first-child:not(.col-data) { font-weight: 700; color: var(--zendesk); }
+/* Na listagem, quem se destaca é a marca. */
+.lista-materias tr.propria .col-marca { font-weight: 700; color: var(--zendesk); }
 /* Coluna numérica alinhada à direita cola no texto da coluna seguinte — daí a
    folga extra à direita, e não só o padding padrão da célula. */
 td.num, th.num { text-align: right; padding-right: 1.1rem; }
@@ -451,6 +457,189 @@ tbody tr:last-child td { border-bottom: none; }
   .ponto-serie { stroke-width: 2.5; }
 }
 
+/* ==========================================================================
+   Abas e listagem de matérias (ADR-0010)
+   ========================================================================== */
+
+.abas {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  gap: .25rem;
+  border-bottom: 1px solid var(--linha);
+}
+
+.aba {
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--tinta-fraca);
+  padding: .85rem 1.1rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  /* -3px encaixa a borda da aba ativa sobre a borda do contêiner, em vez de
+     empilhar duas linhas. */
+  margin-bottom: -1px;
+}
+
+.aba:hover { color: var(--tinta); }
+
+.aba.ativa {
+  color: var(--zendesk);
+  border-bottom-color: var(--zendesk-viva);
+}
+
+.aba:focus-visible { outline: 2px solid var(--zendesk-viva); outline-offset: 2px; }
+
+/* --- Filtros --- */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .9rem;
+  align-items: flex-end;
+  margin-bottom: 1.1rem;
+}
+
+.filtro { display: flex; flex-direction: column; gap: .3rem; }
+
+.filtro > span {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--tinta-fraca);
+}
+
+.filtro input, .filtro select {
+  font: inherit;
+  font-size: .9rem;
+  padding: .5rem .7rem;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  background: var(--papel);
+  color: var(--tinta);
+  min-width: 12rem;
+}
+
+.filtro input:focus, .filtro select:focus {
+  outline: 2px solid var(--zendesk-viva);
+  outline-offset: 1px;
+  border-color: var(--zendesk-viva);
+}
+
+.botao-limpar {
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  padding: .5rem .9rem;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  background: var(--papel);
+  color: var(--tinta-media);
+  cursor: pointer;
+}
+
+.botao-limpar:hover { border-color: var(--tinta-fraca); color: var(--tinta); }
+
+/* --- A tabela --- */
+
+.tabela-materias {
+  background: var(--papel);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 1rem 1.2rem 1.2rem;
+  box-shadow: var(--sombra);
+  /* A tabela é larga; em tela estreita rola na horizontal em vez de espremer o
+     título até uma palavra por linha. */
+  overflow-x: auto;
+}
+
+.lista-materias { margin-top: .6rem; }
+.lista-materias th { white-space: nowrap; }
+
+.lista-materias td {
+  vertical-align: top;
+  padding-top: .6rem;
+  padding-bottom: .6rem;
+}
+
+.col-data { white-space: nowrap; color: var(--tinta-fraca); font-size: .85rem; }
+.col-marca { white-space: nowrap; }
+.col-titulo { min-width: 22rem; line-height: 1.4; }
+.col-veiculo { color: var(--tinta-media); }
+.col-tom { white-space: nowrap; }
+
+.col-titulo a { color: var(--tinta); text-decoration: none; }
+.col-titulo a:hover { color: var(--zendesk); text-decoration: underline; }
+.col-titulo a:focus-visible { outline: 2px solid var(--zendesk-viva); outline-offset: 2px; }
+
+/* Um link que abre em nova aba precisa dizer isso antes do clique. */
+.col-titulo a::after {
+  content: ' ↗';
+  color: var(--tinta-fraca);
+  font-size: .8em;
+}
+
+.pastilha-tom {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .18rem .5rem;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.tom-positive { background: var(--positivo); }
+.tom-neutral  { background: var(--neutro); }
+.tom-negative { background: var(--negativo); }
+
+.estado-lista { color: var(--tinta-fraca); padding: 1.5rem 0; }
+.nota-filtro { margin-top: .8rem; }
+
+/* --- Paginação --- */
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.paginacao button {
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  padding: .55rem 1rem;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  background: var(--papel);
+  color: var(--tinta);
+  cursor: pointer;
+}
+
+.paginacao button:hover:not(:disabled) { border-color: var(--zendesk-viva); }
+
+.paginacao button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+#pagina-atual { font-size: .9rem; color: var(--tinta-media); font-weight: 600; }
+
+@media (max-width: 720px) {
+  .abas { padding: 0 1rem; }
+  .aba { padding: .8rem .7rem; font-size: .9rem; }
+  .filtro input, .filtro select { min-width: 0; width: 100%; }
+  .filtro { flex: 1 1 100%; }
+  .col-titulo { min-width: 14rem; }
+}
+
 /* Respeita quem pediu menos animação no sistema. */
 @media (prefers-reduced-motion: reduce) {
   .barra-preenchida { transition: none; }
@@ -462,4 +651,20 @@ tbody tr:last-child td { border-bottom: none; }
   .pular, .rodape-nota { display: none; }
   .cartao-grafico, .cartao, .alerta { box-shadow: none; break-inside: avoid; }
   .secao { break-inside: avoid; }
+
+  /* Sai o que só serve para clicar. As abas viram enfeite no papel, e os
+     filtros e a paginação sugeririam interação num PDF. Imprime-se a aba que
+     está aberta na tela: quem quer a lista abre a lista e imprime. */
+  .abas, .filtros, .paginacao, .nota-filtro { display: none; }
+
+  /* A listagem é a única parte que PRECISA quebrar entre páginas: 200 linhas
+     não caberiam numa folha, e break-inside: avoid a empurraria inteira para a
+     página seguinte, deixando uma folha em branco. */
+  .tabela-materias { break-inside: auto; border: none; box-shadow: none; padding: 0; }
+  .lista-materias tr { break-inside: avoid; }
+  .lista-materias thead { display: table-header-group; }
+
+  /* O link não é clicável no papel: o endereço vai depois do título. */
+  .col-titulo a::after { content: ''; }
+  .col-titulo a { text-decoration: none; }
 }

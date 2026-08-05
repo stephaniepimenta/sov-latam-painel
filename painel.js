@@ -207,6 +207,9 @@
   function mostrarErro(titulo, detalhe) {
     porId('carregando').hidden = true;
     porId('painel').hidden = true;
+    // Sem resumo não há aba nenhuma para abrir: as duas dependem dele.
+    porId('abas').hidden = true;
+    porId('materias').hidden = true;
     var caixa = porId('erro');
     caixa.hidden = false;
     caixa.querySelector('h2').textContent = titulo;
@@ -231,6 +234,9 @@
     temas(d);
     sentimento(d);
     veiculos(d);
+
+    popularFiltroMarcas(d);
+    ligarAbas();
 
     porId('rodape-versao').textContent = 'Summary format: ' + d.versao + '.';
   }
@@ -735,6 +741,229 @@
     });
     tabela.appendChild(tbody);
     caixaLacunas.appendChild(tabela);
+  }
+
+  // === Aba 2: listagem de matérias =======================================
+  // Substitui a consulta do Looker Studio. É a única parte do painel que mostra
+  // matéria individual, e por isso a única que busca um segundo endereço
+  // (?recurso=materias). Ver docs/DECISOES.md ADR-0010.
+
+  var MATERIAS = { pagina: 1, total: 0, totalPaginas: 1, linhas: [], carregada: false };
+
+  function abrirAba(qual) {
+    var ehPainel = qual === 'painel';
+    porId('painel').hidden = !ehPainel;
+    porId('materias').hidden = ehPainel;
+
+    porId('aba-painel').classList.toggle('ativa', ehPainel);
+    porId('aba-materias').classList.toggle('ativa', !ehPainel);
+    porId('aba-painel').setAttribute('aria-selected', String(ehPainel));
+    porId('aba-materias').setAttribute('aria-selected', String(!ehPainel));
+
+    // Só busca quando a aba é aberta pela primeira vez: quem nunca clicar em
+    // "Articles" não paga o custo de baixar a lista.
+    if (!ehPainel && !MATERIAS.carregada) carregarMaterias(1);
+  }
+
+  function ligarAbas() {
+    porId('abas').hidden = false;
+    porId('aba-painel').addEventListener('click', function () { abrirAba('painel'); });
+    porId('aba-materias').addEventListener('click', function () { abrirAba('materias'); });
+
+    porId('busca-materias').addEventListener('input', desenharMaterias);
+    porId('filtro-marca').addEventListener('change', desenharMaterias);
+    porId('filtro-sentimento').addEventListener('change', desenharMaterias);
+    porId('limpar-filtros').addEventListener('click', function () {
+      porId('busca-materias').value = '';
+      porId('filtro-marca').value = '';
+      porId('filtro-sentimento').value = '';
+      desenharMaterias();
+    });
+
+    porId('pagina-anterior').addEventListener('click', function () {
+      if (MATERIAS.pagina > 1) carregarMaterias(MATERIAS.pagina - 1);
+    });
+    porId('pagina-proxima').addEventListener('click', function () {
+      if (MATERIAS.pagina < MATERIAS.totalPaginas) carregarMaterias(MATERIAS.pagina + 1);
+    });
+  }
+
+  /** Preenche o filtro de marca com as marcas que o resumo conhece. */
+  function popularFiltroMarcas(d) {
+    var sel = porId('filtro-marca');
+    (d.sov || []).forEach(function (s) {
+      var op = el('option', null, s.marca);
+      op.value = s.marca;
+      sel.appendChild(op);
+    });
+  }
+
+  function carregarMaterias(pagina) {
+    var estado = porId('materias-estado');
+    estado.hidden = false;
+    limpar(estado);
+    estado.appendChild(el('p', null, 'Loading the article list…'));
+    limpar(porId('materias-tabela'));
+    porId('paginacao-materias').hidden = true;
+
+    // Na prévia com dados de demonstração não há endereço para consultar.
+    if (window.DADOS_DEMONSTRACAO) {
+      var demo = window.MATERIAS_DEMONSTRACAO;
+      if (!demo) {
+        limpar(estado);
+        estado.appendChild(el('p', 'vazio',
+          'The article list is not part of the demo data.'));
+        return;
+      }
+      receberMaterias(demo);
+      return;
+    }
+
+    var base = (window.CONFIG && CONFIG.URL_RESUMO || '').trim();
+    if (!base) {
+      limpar(estado);
+      estado.appendChild(el('p', 'vazio', 'The summary URL has not been configured yet.'));
+      return;
+    }
+
+    var url = base + (base.indexOf('?') === -1 ? '?' : '&') +
+      'recurso=materias&pagina=' + pagina;
+
+    buscar(url)
+      .then(function (dados) {
+        if (!dados || dados.ok === false) {
+          throw new Error(dados && dados.erro || 'The article list returned an error.');
+        }
+        // Uma implantação anterior à 1.2.0 NÃO dá erro: ela ignora ?recurso= e
+        // devolve o resumo, que não tem matéria nenhuma. Sem esta checagem a aba
+        // diria "No articles to show", como se a planilha estivesse vazia — o
+        // diagnóstico errado, e o único caminho para o certo é o campo recurso.
+        if (dados.recurso !== 'materias') {
+          throw new Error('the published Apps Script deployment is older than ' +
+            'version 1.2.0 and does not serve the article list yet. See the ' +
+            'administrator manual, section 7.4.');
+        }
+        receberMaterias(dados);
+      })
+      .catch(function (erro) {
+        limpar(estado);
+        estado.appendChild(el('p', 'vazio',
+          'Could not load the article list. ' + (erro && erro.message || '')));
+      });
+  }
+
+  function receberMaterias(dados) {
+    MATERIAS.carregada = true;
+    MATERIAS.pagina = dados.pagina || 1;
+    MATERIAS.totalPaginas = dados.totalPaginas || 1;
+    MATERIAS.total = dados.total || 0;
+    MATERIAS.linhas = dados.materias || [];
+    porId('materias-estado').hidden = true;
+    desenharMaterias();
+  }
+
+  /**
+   * Desenha a tabela aplicando busca e filtros. Filtra a PÁGINA carregada, não
+   * a base inteira — a nota abaixo da tabela diz isso a quem lê, porque um
+   * filtro que parece global e não é seria pior do que não ter filtro.
+   */
+  function desenharMaterias() {
+    var caixa = porId('materias-tabela');
+    limpar(caixa);
+
+    var termo = porId('busca-materias').value.trim().toLowerCase();
+    var marca = porId('filtro-marca').value;
+    var tom = porId('filtro-sentimento').value;
+
+    var visiveis = MATERIAS.linhas.filter(function (m) {
+      if (marca && m.marca !== marca) return false;
+      // '—' é a opção "Unclassified": o resumo manda '' nesse caso.
+      if (tom === '—' ? m.sentimento !== '' : (tom && m.sentimento !== tom)) return false;
+      if (!termo) return true;
+      return (m.titulo || '').toLowerCase().indexOf(termo) !== -1 ||
+             (m.veiculo || '').toLowerCase().indexOf(termo) !== -1;
+    });
+
+    var resumoLinha = el('p', 'secao-nota',
+      'Showing ' + num(visiveis.length) + ' of ' + num(MATERIAS.linhas.length) +
+      ' articles on this page · ' + num(MATERIAS.total) + ' in total');
+    caixa.appendChild(resumoLinha);
+
+    if (!visiveis.length) {
+      caixa.appendChild(el('p', 'vazio',
+        MATERIAS.linhas.length
+          ? 'No article on this page matches the filters.'
+          : 'No articles to show.'));
+      atualizarPaginacao();
+      return;
+    }
+
+    var tabela = el('table', 'lista-materias');
+    var thead = el('thead');
+    var tr = el('tr');
+    ['Date', 'Brand', 'Title', 'Outlet', 'Tone'].forEach(function (t) {
+      tr.appendChild(el('th', null, t));
+    });
+    thead.appendChild(tr);
+    tabela.appendChild(thead);
+
+    var tbody = el('tbody');
+    visiveis.forEach(function (m) {
+      var linha = el('tr', m.marca === 'Zendesk' ? 'propria' : null);
+      linha.appendChild(el('td', 'col-data', diaCurto(m.data)));
+
+      var tdMarca = el('td', 'col-marca');
+      tdMarca.appendChild(marcaComCor(m.marca, cor(m.marca)));
+      linha.appendChild(tdMarca);
+
+      // O título é o link, quando existe. textContent sempre: título de matéria
+      // é texto de terceiros. E o href passa por linkSeguro_ no Resumo.gs.
+      var tdTitulo = el('td', 'col-titulo');
+      if (m.link) {
+        var a = el('a', null, m.titulo || '(no title)');
+        a.href = m.link;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        tdTitulo.appendChild(a);
+      } else {
+        tdTitulo.appendChild(document.createTextNode(m.titulo || '(no title)'));
+      }
+      linha.appendChild(tdTitulo);
+
+      linha.appendChild(el('td', 'col-veiculo', m.veiculo || '—'));
+
+      var tdTom = el('td', 'col-tom');
+      if (m.sentimento) {
+        tdTom.appendChild(el('span', 'pastilha-tom tom-' + m.sentimento.toLowerCase(),
+          m.sentimento));
+      } else {
+        tdTom.appendChild(document.createTextNode('—'));
+      }
+      linha.appendChild(tdTom);
+
+      tbody.appendChild(linha);
+    });
+    tabela.appendChild(tbody);
+    caixa.appendChild(tabela);
+
+    atualizarPaginacao();
+  }
+
+  function atualizarPaginacao() {
+    var caixa = porId('paginacao-materias');
+    caixa.hidden = MATERIAS.totalPaginas <= 1;
+    porId('pagina-atual').textContent =
+      'Page ' + MATERIAS.pagina + ' of ' + MATERIAS.totalPaginas;
+    porId('pagina-anterior').disabled = MATERIAS.pagina <= 1;
+    porId('pagina-proxima').disabled = MATERIAS.pagina >= MATERIAS.totalPaginas;
+    porId('nota-filtro').hidden = MATERIAS.totalPaginas <= 1;
+  }
+
+  /** '2026-08-04' → 'Aug 4, 2026'. Curto porque a coluna é estreita. */
+  function diaCurto(iso) {
+    var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return '—';
+    return MESES_CURTOS[Number(m[2]) - 1] + ' ' + Number(m[3]) + ', ' + m[1];
   }
 
   // === Início ============================================================

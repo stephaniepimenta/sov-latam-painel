@@ -40,6 +40,15 @@
   <!-- Avisos honestos: coleta parada, aba vazia, tracker não mapeado. -->
   <section id="avisos" class="avisos" hidden aria-live="polite"></section>
 
+  <!-- Abas. Escondidas até os dados chegarem: sem número na tela, uma aba
+       clicável só levaria a um painel vazio. -->
+  <nav class="abas" id="abas" hidden aria-label="Sections">
+    <button type="button" class="aba ativa" id="aba-painel"
+            aria-controls="painel" aria-selected="true">Dashboard</button>
+    <button type="button" class="aba" id="aba-materias"
+            aria-controls="materias" aria-selected="false">Articles</button>
+  </nav>
+
   <!-- Estado de carregamento e de erro -->
   <div id="carregando" class="estado">
     <p>Loading data from the spreadsheet…</p>
@@ -164,6 +173,61 @@
       </div>
     </section>
 
+  </div>
+
+  <!-- ===== Aba 2: listagem de matérias ===== -->
+  <!-- Substitui a consulta que existia no Looker Studio. É a única parte do
+       painel que mostra matéria individual — ver docs/DECISOES.md ADR-0010. -->
+  <div id="materias" hidden>
+    <section class="secao">
+      <div class="secao-cabecalho">
+        <h2>Articles</h2>
+        <p class="secao-nota">
+          Every unique article collected, most recent first. Republished
+          duplicates are left out, so the count here matches the dashboard.
+        </p>
+      </div>
+
+      <div class="filtros" id="filtros-materias">
+        <label class="filtro">
+          <span>Search title or outlet</span>
+          <input type="search" id="busca-materias" placeholder="e.g. Zendesk, Exame…"
+                 autocomplete="off">
+        </label>
+        <label class="filtro">
+          <span>Brand</span>
+          <select id="filtro-marca"><option value="">All brands</option></select>
+        </label>
+        <label class="filtro">
+          <span>Tone</span>
+          <select id="filtro-sentimento">
+            <option value="">All</option>
+            <option value="Positive">Positive</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Negative">Negative</option>
+            <option value="—">Unclassified</option>
+          </select>
+        </label>
+        <button type="button" class="botao-limpar" id="limpar-filtros">Clear</button>
+      </div>
+
+      <div id="materias-estado" class="estado-lista" aria-live="polite">
+        <p>Loading the article list…</p>
+      </div>
+
+      <div id="materias-tabela" class="tabela-materias"></div>
+
+      <div class="paginacao" id="paginacao-materias" hidden>
+        <button type="button" id="pagina-anterior">← Previous</button>
+        <span id="pagina-atual"></span>
+        <button type="button" id="pagina-proxima">Next →</button>
+      </div>
+
+      <p class="secao-nota nota-filtro" id="nota-filtro" hidden>
+        Filters and search apply to the articles on this page. Use Previous and
+        Next to move through the rest.
+      </p>
+    </section>
   </div>
 </main>
 
