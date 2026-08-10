@@ -372,6 +372,14 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: .92rem;
 }
 
+/* Qual mês o bloco de alertas avaliou. Discreta, mas necessária: sem ela,
+   "nenhuma movimentação" parece falar do mês corrente. */
+.nota-alertas {
+  margin: 0 0 .8rem;
+  font-size: .85rem;
+  color: var(--tinta-media);
+}
+
 /* ===== Avisos =========================================================== */
 
 .avisos { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.75rem; }

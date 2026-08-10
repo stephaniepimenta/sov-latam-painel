@@ -535,10 +535,22 @@
       return;
     }
 
+    // Qual mês foi avaliado. Sem isto, "nenhuma movimentação" é ambíguo: quem lê
+    // supõe que se trata do mês corrente, que é justamente o que o bloco evita
+    // avaliar por estar incompleto.
+    var mes = a.mesAvaliadoLegivel;
+    if (mes) {
+      var nota = 'Evaluating ' + mes;
+      if (a.ignorouMesEmCurso) {
+        nota += ' — the current month is still incomplete, so it is not compared.';
+      }
+      caixa.appendChild(el('p', 'nota-alertas', nota));
+    }
+
     if (!a.lista || !a.lista.length) {
       caixa.appendChild(el('div', 'sem-alerta',
-        'No relevant movement in the most recent month, compared with the ' +
-        'average of previous months.'));
+        'No relevant movement in ' + (mes || 'the evaluated month') +
+        ', compared with the average of previous months.'));
       return;
     }
 
